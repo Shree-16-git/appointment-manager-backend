@@ -1,7 +1,9 @@
 const express = require('express')
+const cors = require('cors')
 
 const app = express()
 
+app.use(cors())
 app.use(express.json())
 
 let appointments = [
@@ -18,7 +20,7 @@ app.post('/appointments', (req, res) => {
     const newAppointment = {
         id: Date.now(),
         title: req.body.title,
-        dtae: req.body.date
+        date: req.body.date
     };
     appointments.push(newAppointment)
     res.status(201).json(newAppointment)
