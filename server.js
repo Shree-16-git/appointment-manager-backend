@@ -1,33 +1,59 @@
 const express = require('express')
 const cors = require('cors')
+require("dotenv").config();
 
+
+const mongoose = require("mongoose");
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 
-let appointments = [
-    { id: 1, title: "Dentist", date: "2026-11-10" },
-]
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.log("DB error:", err));
 
-app.delete('/appointments/:id', (req, res) => {
-    const id = Number(req.params.id)
-    appointments = appointments.filter((a) => a.id !== id)
-    res.json({message: 'deleted'})
+const appointmentSchema = new mongoose.Schema({
+    title: String,
+    date: String
 })
 
-app.post('/appointments', (req, res) => {
-    const newAppointment = {
-        id: Date.now(),
+const Appointment = mongoose.model("Appointment", appointmentSchema)
+
+app.get('/appointments', async (req,res) => {
+    try{
+        const appointments = await Appointment.find();
+        res.json(appointments)
+    } catch(error){
+        res.status(500).json({ message: "Failed to fetch" });
+    }
+    
+})
+
+app.post('/appointments', async (req, res) => {
+    try{
+        const newAppointment = await Appointment.create({
         title: req.body.title,
         date: req.body.date
-    };
-    appointments.push(newAppointment)
+    });
     res.status(201).json(newAppointment)
+    }
+    catch(error){
+        res.status(500).json({ message: "Failed to create" });
+    }
+    
+    
 })
 
-app.get('/appointments', (req,res) => {
-    res.send(appointments)
+app.delete('/appointments/:id', async (req, res) => {
+    try{
+        await Appointment.findByIdAndDelete(req.params.id)
+        res.json({message: 'Deleted'});
+    }
+    catch(error){
+        res.status(500).json({ message: "Failed to create" });
+    }
 })
 
 app.get('/', (req, res) => {
